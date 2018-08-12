@@ -1,0 +1,17 @@
+syntax: glob
+*.class
+test-output/
+testng-output/
+*.xml~
+*.png
+*~
+*.orig
+.*Driver.java
+testng_output/
+.idea
+.settings
+*.iml
+*.png
+target/
+*.log
+dependency-reduced-pom.xml
