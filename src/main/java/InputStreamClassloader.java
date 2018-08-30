@@ -38,6 +38,7 @@ public class InputStreamClassloader extends ClassLoader {
 
             byte[] classBytes = baos.toByteArray();
             clazz = defineClass(name, classBytes, 0, classBytes.length);
+            resolveClass(clazz);
             return clazz;
         } catch (IOException e) {
             e.printStackTrace();
