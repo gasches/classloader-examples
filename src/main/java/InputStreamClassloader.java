@@ -2,47 +2,40 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 
 public class InputStreamClassloader extends ClassLoader {
     private static final int BUF_SIZE = 1024;
 
     private final BufferedInputStream is;
-    private final String className;
 
-    private Class<?> clazz;
-
-    public InputStreamClassloader(ClassLoader parent, InputStream is, String name) {
-        super(parent);
-        this.is = new BufferedInputStream(is);
-        this.className = name;
+    public InputStreamClassloader(InputStream is) {
+        if (is instanceof BufferedInputStream) {
+            this.is = (BufferedInputStream) is;
+        } else {
+            this.is = new BufferedInputStream(is);
+        }
     }
 
-    public synchronized Class<?> loadClass(String name) throws ClassNotFoundException {
+    public InputStreamClassloader(ClassLoader parent, InputStream is) {
+        super(parent);
+        this.is = new BufferedInputStream(is);
+    }
+
+    @Override
+    protected Class<?> findClass(String name) {
+        System.out.printf("Load class %s with InputStreamClassloader\n", name);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] bbuf = new byte[BUF_SIZE];
+        int n;
         try {
-            if (!className.equals(name)) {
-                return super.loadClass(name);
-            }
-
-            if (clazz != null) {
-                return clazz;
-            }
-
-            System.out.println("Load class " + name);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            byte[] bbuf = new byte[BUF_SIZE];
-            int n;
             while ((n = is.read(bbuf)) > 0) {
                 baos.write(bbuf, 0, n);
             }
-
-            byte[] classBytes = baos.toByteArray();
-            clazz = defineClass(name, classBytes, 0, classBytes.length);
-            resolveClass(clazz);
-            return clazz;
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new ClassNotFoundException(e.getMessage(), e);
+        } catch (IOException ioe) {
+            throw new UncheckedIOException(ioe);
         }
+        byte[] classData = baos.toByteArray();
+        return defineClass(name, classData, 0, classData.length);
     }
 }

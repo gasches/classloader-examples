@@ -25,6 +25,7 @@ public class Application {
         server.createContext("/", new ExecHandler());
         server.setExecutor(Executors.newFixedThreadPool(nThreads));
         server.start();
+        System.out.printf("Server is started at port %d with %d threads.\n", port, nThreads);
     }
 
     static class ExecHandler implements HttpHandler {
@@ -46,8 +47,7 @@ public class Application {
             StringWriter sw = new StringWriter();
             PrintWriter writer = new PrintWriter(sw);
             try {
-                InputStreamClassloader classloader =
-                        new InputStreamClassloader(ClassLoader.getSystemClassLoader(), is, className);
+                InputStreamClassloader classloader = new InputStreamClassloader(is);
                 Class<?> clazz = classloader.loadClass(className);
                 Consumer<PrintWriter> consumer = (Consumer<PrintWriter>) clazz.newInstance();
                 consumer.accept(writer);
